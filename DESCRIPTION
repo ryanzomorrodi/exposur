@@ -1,10 +1,10 @@
 Package: exposur
-Title: What the Package Does (One Line, Title Case)
+Title: Download and Process Hurricane Exposure Data
 Version: 0.0.0.9000
 Authors@R: 
     person("Ryan", "Zomorrodi", , "rzomor2@uic.edu", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: Heavily inspired by the 'hurricaneexposure' package, exposur aims to make the process of downloading and processing hurricane exposure data easier
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

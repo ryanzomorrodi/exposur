@@ -14,5 +14,8 @@ for my personal use.
 You can install the development version of `exposur` like so:
 
 ``` r
+# first download the stormwindmodel
+pak::install("geanders/stormwindmodel")
+# then install this package
 pak::install("ryanzomorrodi/exposur")
 ```
