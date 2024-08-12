@@ -1,0 +1,60 @@
+---
+title: "Harvey Analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Harvey Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, eval = FALSE}
+library(exposur)
+library(tigris)
+library(tidyverse)
+library(sf)
+library(devtools)
+load_all()
+```
+
+```{r, eval = FALSE}
+TXLA_fips <- c("22", "48")
+TXLA_tracts <- TXLA_fips |>
+  map(~ tracts(state = .x, cb = TRUE)) |>
+  bind_rows()
+```
+
+Getting raw data
+```{r, eval = FALSE}
+harvey_hurdat2  <- get_hurdat2(
+  storm_id = "HARVEY-2017",
+  path = "raw-data/hurdat2"
+)
+harvey_start <- min(harvey_hurdat2$datetime)
+harvey_end <- max(harvey_hurdat2$datetime)
+
+harvey_nClimGrid <- get_nClimGrid(
+  interval = interval(harvey_start, harvey_end + days(2)),
+  path = "raw-data/nClimGrid"
+)
+
+harvey_eaglei <- get_eaglei(
+  interval = interval(harvey_start, harvey_end + days(5)),
+  path = "raw-data/eaglei"
+)
+```
+
+Calculating measures
+```{r, eval = FALSE}
+harvey_closest_dist <- calc_closest_dist(harvey_hurdat2, TXLA_tracts)
+harvey_outage <- calc_outage(harvey_eaglei, TXLA_fips)
+harvey_daily_avgs <- calc_daily_avgs(harvey_nClimGrid, TXLA_tracts)
+harvey_anderson_prcp <- calc_anderson_prcp(harvey_daily_avgs, harvey_closest_dist)
+harvey_anderson_wind <- calc_anderson_wind(harvey_hurdat2, TXLA_tracts)
+```
