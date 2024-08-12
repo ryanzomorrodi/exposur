@@ -19,8 +19,6 @@ library(exposur)
 library(tigris)
 library(tidyverse)
 library(sf)
-library(devtools)
-load_all()
 ```
 
 ```{r, eval = FALSE}
