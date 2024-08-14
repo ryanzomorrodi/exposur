@@ -18,8 +18,10 @@ HURDAT2 best track for a given storm
 Data is downloaded from NOAA \href{https://www.nhc.noaa.gov/data/hurdat/}{HURDAT2 HTTPS Server}
 }
 \examples{
+\dontrun{
 harvey_hurdat2  <- get_hurdat2(
   storm_id = "HARVEY-2017",
   path = "raw-data/hurdat2"
 )
+}
 }

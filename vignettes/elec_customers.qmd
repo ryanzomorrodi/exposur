@@ -1,0 +1,140 @@
+```{r}
+library(tidyverse)
+library(readxl)
+library(tidycensus)
+
+tf <- tempfile(fileext = ".xlsx")
+curl::curl_download("https://www2.census.gov/programs-surveys/susb/tables/2018/county_3digitnaics_2018.xlsx", tf)
+
+establishment_count <- read_excel(tf, skip = 2) |>
+  filter(`NAICS Description` == "Total") |>
+  filter(`Enterprise Size` == "1: Total") |>
+  mutate(GEOID = str_c(State, County))
+
+household_count <- get_acs(
+  "county",
+  "B11001_001",
+  year = 2018 + 2,
+  output = "wide"
+)
+
+counts <- establishment_count |>
+  left_join(household_count) |>
+  mutate(total_res_com = Establishments + B11001_001E) |>
+  select(GEOID, total_res_com)
+```
+
+
+```{r}
+library(httr2)
+
+body <- request("https://www.eia.gov/electricity/data/browser/data/index.php?method=getMapData&geosetId=ELEC.CUSTOMERS.ALL.M&freq=M&topic=56") |> 
+  req_perform() |>
+  resp_body_json()
+
+nums <- tibble(body = pluck(body, 2)) |>
+  unnest_wider(body)
+dates <- tibble(month = unlist(pluck(body, 1)))
+
+NC_customers <- bind_cols(dates, nums) |>
+  pivot_longer(!month, names_to = "state", values_to = "customers") |>
+  mutate(state = str_remove(state, "US-")) |>
+  filter(str_sub(month, 1, 4) == "2018") |>
+  group_by(state) |>
+  summarize(customers = mean(customers))
+
+counts |>
+  filter(str_sub(GEOID, 1, 2) == "37") |> 
+  filter(str_sub(GEOID, 3, 5) != "999") |>
+  summarize(sum(total_res_com))
+```
+
+
+```{r}
+library(sf)
+library(tigris)
+library(devtools)
+load_all()
+
+NC_fips <- "37"
+NC_counties <- counties(state = NC_fips, cb = TRUE)
+NC_tracts <- tracts(state = NC_fips, cb = TRUE)
+
+# get dates
+florence_hurdat2  <- get_hurdat2(
+  storm_id = "FLORENCE-2018",
+  path = "raw-data/hurdat2"
+) |>
+   filter(datetime > "2018-09-13 12:00:00")
+florence_track <- st_combine(florence_hurdat2) |>
+  st_cast("LINESTRING")
+florence_start <- min(florence_hurdat2$datetime)
+florence_end <- max(florence_hurdat2$datetime)
+
+# get outage data
+florence_eaglei <- get_eaglei(
+  interval = interval(florence_start, florence_end + days(5)),
+  path = "raw-data/eaglei"
+)
+florence_outage <- calc_outage(florence_eaglei, NC_fips)
+florence_outage_sf <- NC_counties |>
+  left_join(florence_outage, by = "GEOID")
+```
+
+
+```{r}
+florence_eaglei |>
+  group_by(GEOID) |>
+  filter(customers_out == max(customers_out, na.rm = TRUE)) |>
+  filter(str_sub(GEOID, 1, 2) == "37") |>
+  arrange(desc(customers_out))
+
+est_customers <- counts |>
+  filter(str_sub(GEOID, 1, 2) == "37") |> 
+  filter(str_sub(GEOID, 3, 5) != "999") |>
+  mutate(customers_est = NC_customers * total_res_com/sum(total_res_com))
+
+florence_eaglei <- florence_eaglei |>
+  left_join(est_customers) |>
+  filter(str_sub(GEOID, 1, 2) == "37") |>
+  select(-c(customers, total_res_com)) |>
+  rename(customers = customers_est)
+```
+
+```{r}
+# get dates
+dorain_hurdat2  <- get_hurdat2(
+  storm_id = "DORIAN-2019",
+  path = "raw-data/hurdat2"
+)
+dorain_track <- st_combine(dorain_hurdat2) |>
+  st_cast("LINESTRING")
+dorain_start <- min(dorain_hurdat2$datetime)
+dorain_end <- max(dorain_hurdat2$datetime)
+
+# get outage data
+dorain_eaglei <- get_eaglei(
+  interval = interval(dorain_start, dorain_end + days(5)),
+  path = "raw-data/eaglei"
+)
+dorain_eaglei <- dorain_eaglei |>
+  left_join(est_customers) |>
+  filter(str_sub(GEOID, 1, 2) == "37") |>
+  select(-c(customers, total_res_com)) |>
+  rename(customers = customers_est)
+
+dorain_outage <- calc_outage(dorain_eaglei, NC_fips)
+dorain_outage_sf <- NC_counties |>
+  left_join(dorain_outage, by = "GEOID")
+
+library(tmap)
+
+ggplot(florence_outage_sf) +
+  geom_sf(aes(fill = max_pct_out), color = NA) +
+  scale_fill_gradientn(
+    breaks = c(0, 0.10, .30, .60, 1.00), 
+    colors = c("#034281", "#827f00", "#963c00", "#820f00", "#430802"))
+
+dorain_outage_sf |>
+  filter(GEOID == "37095")
+```

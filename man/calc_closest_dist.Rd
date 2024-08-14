@@ -20,8 +20,10 @@ Closest distance and time to track for each geography
 Calculate Closest Distance and Time
 }
 \examples{
+\dontrun{
 harvey_closest_dist <- calc_closest_dist(
   harvey_hurdat2,
   TXLA_tracts
 )
+}
 }

@@ -23,8 +23,10 @@ the date of the closest distance for each geography
 Calculate Anderson et al. Precipitation
 }
 \examples{
+\dontrun{
 harvey_anderson_prcp <- calc_anderson_prcp(
   harvey_daily_avgs,
   harvey_closest_dist
 )
+}
 }

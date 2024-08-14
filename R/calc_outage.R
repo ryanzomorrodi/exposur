@@ -16,7 +16,7 @@
 #' }
 calc_outage <- function(eaglei, state_fips = NULL) {
   output <- eaglei |>
-    dplyr::group_by(.data$GEOID) |>
+    dplyr::group_by(.data$geoid) |>
     dplyr::mutate(
       "customers_out" = dplyr::if_else(
         is.na(.data$customers_out),
@@ -37,7 +37,7 @@ calc_outage <- function(eaglei, state_fips = NULL) {
 
   if (!is.null(state_fips)) {
     output <- output |>
-      filter(stringr::str_sub(.data$GEOID, 1, 2) %in% state_fips)
+      filter(stringr::str_sub(.data$geoid, 1, 2) %in% state_fips)
   }
 
   output

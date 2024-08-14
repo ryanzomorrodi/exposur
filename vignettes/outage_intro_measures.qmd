@@ -1,0 +1,301 @@
+---
+title: "Matthew Florence Outage EDA"
+format: 
+  html:
+    page-layout: full
+execute:
+  cache: true
+  warning: false
+  message: false
+---
+
+
+```{r, include = FALSE}
+library(exposur)
+library(tigris)
+library(tidyverse)
+library(sf)
+```
+
+```{r, include = FALSE} 
+NC_fips <- "37"
+NC_counties <- counties(state = NC_fips, cb = TRUE)
+NC_tracts <- tracts(state = NC_fips, cb = TRUE)
+```
+
+```{r, include = FALSE}
+# get dates
+matthew_hurdat2  <- get_hurdat2(
+  storm_id = "MATTHEW-2016",
+  path = "raw-data/hurdat2"
+)
+matthew_track <- st_combine(matthew_hurdat2) |>
+  st_cast("LINESTRING")
+matthew_start <- min(matthew_hurdat2$datetime)
+matthew_end <- max(matthew_hurdat2$datetime)
+
+# get outage data
+matthew_eaglei <- get_eaglei(
+  interval = interval(matthew_start, matthew_end + days(5)),
+  path = "raw-data/eaglei"
+)
+matthew_outage <- calc_outage(matthew_eaglei, NC_fips)
+matthew_outage_sf <- NC_counties |>
+  left_join(matthew_outage, by = "GEOID")
+```
+
+```{r, include = FALSE}
+# get dates
+florence_hurdat2  <- get_hurdat2(
+  storm_id = "FLORENCE-2018",
+  path = "../raw-data/hurdat2"
+) |>
+   filter(datetime > "2018-09-13 12:00:00")
+florence_track <- st_combine(florence_hurdat2) |>
+  st_cast("LINESTRING")
+florence_start <- min(florence_hurdat2$datetime)
+florence_end <- max(florence_hurdat2$datetime)
+
+# get outage data
+florence_eaglei <- get_eaglei(
+  interval = interval(florence_start, florence_end + days(5)),
+  path = "../raw-data/eaglei"
+)
+florence_outage <- calc_outage(florence_eaglei, NC_fips)
+florence_outage_sf <- NC_counties |>
+  left_join(florence_outage, by = "GEOID")
+```
+
+# Summary Stats
+
+**Maximum Outage Percentage**: Maximum percentage of customers with no power by county over the course of the storm to 5 days after  
+**Average Outage Duration**: Average customer's total duration (days) with no power by county over the course of the storm to 5 days after
+
+```{r, echo = FALSE}
+#| layout-ncol: 2
+
+bind_cols(
+  Florence = florence_outage$max_pct_out,
+  Matthew = matthew_outage$max_pct_out
+) |>
+  summary() |> 
+  knitr::kable(caption = "Maximum Outage Percentage")
+
+bind_cols(
+  Florence = florence_outage$avg_customer_hrs_out / 24,
+  Matthew = matthew_outage$avg_customer_hrs_out / 24
+) |>
+  summary() |> 
+  knitr::kable(caption = "Average Outage Duration")
+```
+
+```{r, echo = FALSE}
+#| layout-ncol: 2
+table <- bind_cols(florence_outage, storm = "Florence") |>
+  bind_rows(
+    bind_cols(matthew_outage, storm = "Matthew")
+  ) 
+  
+ggplot(table) +
+  geom_boxplot(aes(y = max_pct_out)) +
+  facet_wrap(~ storm) +
+  labs(title = "Maximum Outage Percentage")
+
+ggplot(table) +
+  geom_boxplot(aes(y = avg_customer_hrs_out / 24 )) +
+  facet_wrap(~ storm) +
+  labs(title = "Average Outage Duration")
+```
+
+# Correlation
+## Matthew
+```{r, echo = FALSE, fig.width= 10}
+matthew_prcp <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Matthew16/prcp_tr10.csv")
+matthew_close <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Matthew16/closest_dis_tr10.csv")
+matthew_wind <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Matthew16/windmodel_tr10.csv")
+
+matthew_prcp <- matthew_prcp |>
+  left_join(matthew_close) |>
+  mutate(closest_date = as_date(closest_date)) |>
+  group_by(geoid) |>
+  filter(DATE %within% interval(closest_date - days(1), closest_date + days(2))) |>
+  summarize(prcp = sum(PRCPpred))
+
+matthew <- select(matthew_wind, geoid, vmax_sust, vmax_gust) |>
+  left_join(matthew_prcp) |>
+  left_join(select(matthew_close, geoid, storm_dist)) |>
+  mutate(geoid = as.character(geoid)) |>
+  mutate(geoid_cnty = str_sub(geoid, 1, 5)) |> 
+  left_join(
+    x = select(matthew_outage_sf, GEOID, max_pct_out, avg_customer_hrs_out), 
+    c("GEOID" = "geoid_cnty")
+  )
+
+library(corrr)
+
+matthew_net <- matthew |>
+  select(where(is.numeric)) |>
+  st_drop_geometry() |>
+  correlate(quiet = TRUE, method = "spearman") |>
+  mutate(across(where(is.numeric), ~ .x - runif(length(.x), 0, 0.01))) |>
+  network_plot() 
+
+matthew_corr <- matthew |>
+  select(where(is.numeric)) |>
+  st_drop_geometry() |>
+  cor(use = "pairwise.complete.obs", method = "spearman") |>
+  ggcorrplot::ggcorrplot(type = "upper", colors = c("skyblue1", "white", "indianred2"), lab = TRUE)
+
+cowplot::plot_grid(matthew_net, matthew_corr)
+```
+
+## Florence
+```{r, echo = FALSE, fig.width= 10}
+florence_prcp <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Florence18/prcp_tr10.csv")
+florence_close <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Florence18/closest_dis_tr10.csv")
+florence_wind <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Florence18/windmodel_tr10.csv")
+
+florence_prcp <- florence_prcp |>
+  left_join(florence_close) |>
+  mutate(closest_date = as_date(closest_date)) |>
+  group_by(geoid) |>
+  filter(DATE %within% interval(closest_date - days(1), closest_date + days(2))) |>
+  summarize(prcp = sum(PRCPpred))
+
+florence <- select(florence_wind, geoid, vmax_sust, vmax_gust) |>
+  left_join(florence_prcp) |>
+  left_join(select(florence_close, geoid, storm_dist)) |>
+  mutate(geoid = as.character(geoid)) |>
+  mutate(geoid_cnty = str_sub(geoid, 1, 5)) |> 
+  left_join(
+    x = select(florence_outage_sf, GEOID, max_pct_out, avg_customer_hrs_out), 
+    c("GEOID" = "geoid_cnty")
+  )
+
+florence_net <- florence |>
+  select(where(is.numeric)) |>
+  st_drop_geometry() |>
+  correlate(quiet = TRUE, method = "spearman") |>
+  mutate(across(where(is.numeric), ~ .x - runif(length(.x), 0, 0.01))) |>
+  network_plot() 
+
+florence_corr <- florence |>
+  select(where(is.numeric)) |>
+  st_drop_geometry() |>
+  cor(use = "pairwise.complete.obs", method = "spearman") |>
+  ggcorrplot::ggcorrplot(type = "upper", colors = c("skyblue1", "white", "indianred2"), lab = TRUE)
+
+cowplot::plot_grid(florence_net, florence_corr)
+```
+
+# Maps
+
+## Florence 
+```{r, echo = FALSE, fig.width= 10}
+ggplot() +
+  geom_sf(data = florence_outage_sf, aes(fill = max_pct_out)) +
+  scale_fill_distiller(palette = "Blues", direction = 1) +
+  geom_sf(data = florence_track) +
+  geom_sf(data = florence_hurdat2, alpha = 0.5, aes(size = wind, color = wind)) +
+  scale_size_continuous(range = c(0, 40), limits = c(0, 100)) +
+  scale_color_distiller(palette = "BuPu", direction = 1, limits = c(0, 100)) +
+  coord_sf(xlim = c(-84, - 75), ylim = c(33, 36.7)) +
+  labs(
+    title = "Florence Maximum Outage Percentage",
+    fill = "Maximum Outage (%)",
+    color = "Wind (knots)"
+  ) +
+  guides(size = "none") +
+  theme_void() +
+  theme(
+    plot.title = element_text(size = 20, face = "bold", hjust = 0.5),
+    legend.title = element_text(size = 14),
+    legend.key.size = unit(0.75, 'cm'),
+    legend.position = "bottom",
+    legend.title.position = "top",
+    legend.key.spacing = unit(0.5, "cm"),
+    legend.spacing.x = unit(2, "cm")
+  )
+```
+
+```{r, echo = FALSE, fig.width= 10}
+ggplot() +
+  geom_sf(data = florence_outage_sf, aes(fill = avg_customer_hrs_out / 24)) +
+  scale_fill_distiller(palette = "Greens", direction = 1) +
+  geom_sf(data = florence_track) +
+  geom_sf(data = florence_hurdat2, alpha = 0.5, aes(size = wind, color = wind)) +
+  scale_size_continuous(range = c(0, 40), limits = c(0, 100)) +
+  scale_color_distiller(palette = "GnBu", direction = 1, limits = c(0, 100)) +
+  coord_sf(xlim = c(-84, - 75), ylim = c(33, 36.7)) +
+  labs(
+    title = "Florence Average Customer Outage Duration",
+    fill = "Average Outage (days)",
+    color = "Wind (knots)"
+  ) +
+  guides(size = "none") +
+  theme_void() +
+  theme(
+    plot.title = element_text(size = 20, face = "bold", hjust = 0.5),
+    legend.title = element_text(size = 14),
+    legend.key.size = unit(0.75, 'cm'),
+    legend.position = "bottom",
+    legend.title.position = "top",
+    legend.key.spacing = unit(0.5, "cm"),
+    legend.spacing.x = unit(2, "cm")
+  )
+```
+
+## Matthew
+```{r, echo = FALSE, fig.width= 10}
+ggplot() +
+  geom_sf(data = matthew_outage_sf, aes(fill = max_pct_out)) +
+  scale_fill_distiller(palette = "Blues", direction = 1) +
+  geom_sf(data = matthew_track) +
+  geom_sf(data = matthew_hurdat2, alpha = 0.5, aes(size = wind, color = wind)) +
+  scale_size_continuous(range = c(0, 40), limits = c(0, 100)) +
+  scale_color_distiller(palette = "BuPu", direction = 1, limits = c(0, 100)) +
+  coord_sf(xlim = c(-84, - 75), ylim = c(33, 36.7)) +
+  labs(
+    title = "Matthew Maximum Outage Percentage",
+    fill = "Maximum Outage (%)",
+    color = "Wind (knots)"
+  ) +
+  guides(size = "none") +
+  theme_void() +
+  theme(
+    plot.title = element_text(size = 20, face = "bold", hjust = 0.5),
+    legend.title = element_text(size = 14),
+    legend.key.size = unit(0.75, 'cm'),
+    legend.position = "bottom",
+    legend.title.position = "top",
+    legend.key.spacing = unit(0.5, "cm"),
+    legend.spacing.x = unit(2, "cm")
+  )
+```
+
+```{r, echo = FALSE, fig.width= 10}
+ggplot() +
+  geom_sf(data = matthew_outage_sf, aes(fill = avg_customer_hrs_out / 24)) +
+  scale_fill_distiller(palette = "Greens", direction = 1) +
+  geom_sf(data = matthew_track) +
+  geom_sf(data = matthew_hurdat2, alpha = 0.5, aes(size = wind, color = wind)) +
+  scale_size_continuous(range = c(0, 40), limits = c(0, 100)) +
+  scale_color_distiller(palette = "GnBu", direction = 1, limits = c(0, 100)) +
+  coord_sf(xlim = c(-84, - 75), ylim = c(33, 36.7)) +
+  labs(
+    title = "Matthew Average Customer Outage Duration",
+    fill = "Average Outage (days)",
+    color = "Wind (knots)"
+  ) +
+  guides(size = "none") +
+  theme_void() +
+  theme(
+    plot.title = element_text(size = 20, face = "bold", hjust = 0.5),
+    legend.title = element_text(size = 14),
+    legend.key.size = unit(0.75, 'cm'),
+    legend.position = "bottom",
+    legend.title.position = "top",
+    legend.key.spacing = unit(0.5, "cm"),
+    legend.spacing.x = unit(2, "cm")
+  )
+```

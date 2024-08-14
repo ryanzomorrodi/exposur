@@ -46,6 +46,11 @@ harvey_eaglei <- get_eaglei(
   interval = interval(harvey_start, harvey_end + days(5)),
   path = "raw-data/eaglei"
 )
+
+harvey_stormevents <- get_stormevents(
+  interval = interval(harvey_start, harvey_end),
+  path = "raw-data/stormevents"
+)
 ```
 
 Calculating measures
@@ -55,4 +60,27 @@ harvey_outage <- calc_outage(harvey_eaglei, TXLA_fips)
 harvey_daily_avgs <- calc_daily_avgs(harvey_nClimGrid, TXLA_tracts)
 harvey_anderson_prcp <- calc_anderson_prcp(harvey_daily_avgs, harvey_closest_dist)
 harvey_anderson_wind <- calc_anderson_wind(harvey_hurdat2, TXLA_tracts)
+```
+
+```{r, eval = FALSE}
+library(tmap)
+
+harvey_anderson_prcp <- calc_anderson_prcp(harvey_daily_avgs, harvey_closest_dist, days_before = 4, days_after = 4)
+
+harvey_anderson_prcp |>
+  left_join(x = TXLA_tracts, c("GEOID" = "geoid")) |>
+tm_shape() +
+  tm_polygons("cum_prcp", lwd = 0)
+
+harvey_closest_dist |>
+  mutate(closest_date = as_date(closest_date)) |>
+  left_join(x = TXLA_tracts, c("GEOID" = "geoid")) |>
+tm_shape() +
+  tm_polygons("closest_date", lwd = 0)
+
+
+harvey_outage |>
+  left_join(x = TXLA_tracts) |>
+  ggplot() +
+    geom_sf(aes(fill = max_pct_out))
 ```

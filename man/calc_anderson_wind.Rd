@@ -21,8 +21,10 @@ using the \code{stormwindmodel}
 Calculate Anderson et al. Wind
 }
 \examples{
+\dontrun{
 harvey_anderson_wind <- calc_anderson_wind(
   harvey_hurdat2,
   TXLA_tracts
 )
+}
 }

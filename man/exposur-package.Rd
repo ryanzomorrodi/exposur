@@ -4,9 +4,16 @@
 \name{exposur-package}
 \alias{exposur}
 \alias{exposur-package}
-\title{exposur: What the Package Does (One Line, Title Case)}
+\title{exposur: Download and Process Hurricane Exposure Data}
 \description{
-What the package does (one paragraph).
+Heavily inspired by the 'hurricaneexposure' package, exposur aims to make the process of downloading and processing hurricane exposure data easier
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://ryanzomorrodi.github.io/exposur/}
+}
+
 }
 \author{
 \strong{Maintainer}: Ryan Zomorrodi \email{rzomor2@uic.edu} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})

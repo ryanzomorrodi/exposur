@@ -19,8 +19,10 @@ by county
 Calculate Outage Max Precentage and Average Duration
 }
 \examples{
+\dontrun{
 harvey_outage <- calc_outage(
   harvey_eaglei,
   TXLA_fips
 )
+}
 }

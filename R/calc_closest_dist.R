@@ -25,7 +25,7 @@ calc_closest_dist <- function(hurdat2, geography, geoid = "GEOID") {
       "near_idx" = sf::st_nearest_feature(geography, interp_track),
       "closest_date" = interp_track$datetime[.data$near_idx],
       "closest_dist" = sf::st_distance(
-        interp_track$geography[.data$near_idx],
+        interp_track$geometry[.data$near_idx],
         geography,
         by_element = TRUE
       )

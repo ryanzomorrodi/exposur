@@ -21,8 +21,10 @@ geography
 Calculate Daily Average for Each Geography
 }
 \examples{
+\dontrun{
 harvey_daily_avgs <- calc_daily_avgs(
   harvey_nClimGrid,
   TXLA_tracts
 )
+}
 }

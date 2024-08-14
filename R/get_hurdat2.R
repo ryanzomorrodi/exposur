@@ -96,7 +96,8 @@ get_hurdat2 <- function(storm_id, path = NULL) {
       "lon" = ifelse(.data$lon_dir == "W", -1 * .data$lon, .data$lon)
     ) |>
     dplyr::mutate(
-      "date" = lubridate::as_datetime(stringr::str_c(.data$date, .data$time))
+      "date" = lubridate::as_datetime(stringr::str_c(.data$date, .data$time)),
+      "wind" = as.integer(.data$wind)
     ) |>
     dplyr::select(-c("lat_dir", "lon_dir", "time")) |>
     dplyr::rename("datetime" = "date") |>
