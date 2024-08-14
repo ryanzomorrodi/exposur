@@ -18,7 +18,9 @@ Daily average for all \code{nClimGrid} measures for each
 geography
 }
 \description{
-Calculate Daily Average for Each Geography
+Calculates a daily average for all \code{nClimGrid} measures
+for each geography utilizing the \code{exactextractr} package
+for zonal means.
 }
 \examples{
 \dontrun{

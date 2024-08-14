@@ -9,13 +9,15 @@ get_hurdat2(storm_id, path = NULL)
 \arguments{
 \item{storm_id}{Storm name in all caps, dash, year (EX: "HARVEY-2017")}
 
-\item{path}{Path to download files into}
+\item{path}{Path to download files into (if not provided,
+files will be download into the \code{tempdir()})}
 }
 \value{
 HURDAT2 best track for a given storm
 }
 \description{
-Data is downloaded from NOAA \href{https://www.nhc.noaa.gov/data/hurdat/}{HURDAT2 HTTPS Server}
+Downloads most recent HURDAT2 file from NOAA
+\href{https://www.nhc.noaa.gov/data/hurdat/}{HURDAT2 HTTPS Server}
 }
 \examples{
 \dontrun{

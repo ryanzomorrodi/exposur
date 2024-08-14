@@ -1,5 +1,10 @@
 #' Calculate Daily Average for Each Geography
 #'
+#' @description
+#' Calculates a daily average for all `nClimGrid` measures
+#' for each geography utilizing the `exactextractr` package
+#' for zonal means.
+#'
 #' @param nClimGrid Output from `get_nClimGrid()`
 #' @param geography `sf` object for the area of interest
 #' @param geoid Unique identifier for geography

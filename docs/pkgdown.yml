@@ -3,7 +3,8 @@ pkgdown: 2.0.9
 pkgdown_sha: ~
 articles:
   harvey_analysis: harvey_analysis.html
-last_built: 2024-08-12T16:35Z
+  outage_intro_measures: outage_intro_measures.html
+last_built: 2024-08-14T16:40Z
 urls:
   reference: https://ryanzomorrodi.github.io/exposur/reference
   article: https://ryanzomorrodi.github.io/exposur/articles

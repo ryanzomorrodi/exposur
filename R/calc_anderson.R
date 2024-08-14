@@ -1,12 +1,15 @@
 #' Calculate Anderson et al. Precipitation
 #'
+#' @description
+#' Calculates the cumulative precipitation over the `days_before` to
+#' `days_after` the closest approach.
+#'
 #' @param daily_avgs Output from `calc_daily_avgs()`
 #' @param closest_dist Output from `calc_closest_dist()`
 #' @param days_before Number of days before closest distance (default 1)
 #' @param days_after Number of days after closest distance (default 2)
-#' 
-#' @return Cumulative precipitation from `days_before` to `days_after`
-#' the date of the closest distance for each geography
+#'
+#' @return Cumulative precipitation for each geography
 #' @export
 #'
 #' @examples
@@ -34,10 +37,22 @@ calc_anderson_prcp <- function(
 
 #' Calculate Anderson et al. Wind
 #'
+#' @description
+#' Leverages the [`stormwindmodel`](https://github.com/geanders/stormwindmodel)
+#' to allow for the approximate calculation wind exposure at
+#' individual points.
+#'
+#' @details
+#' ## Centroids
+#' By default this package will take the mean centroid of whatever
+#' geography provided to it. If you would like to approximate exposure
+#' at the population weighted centroid use `centr::mean_center()` on
+#' your geography before providing it to this function.
+#'
 #' @param hurdat2 Output from `get_hurdat2()`
 #' @param geography `sf` object for the area of interest
 #' @param geoid Unique identifier for geography
-#' 
+#'
 #' @return Maximum wind and gust speed and duration calculated
 #' using the `stormwindmodel`
 #' @export

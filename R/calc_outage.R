@@ -1,5 +1,9 @@
 #' Calculate Outage Max Precentage and Average Duration
 #'
+#' @description
+#' Estimates the maximum outage precentage and average
+#' duration of outage for each county.
+#'
 #' @param eaglei Output from `get_outage()`
 #' @param state_fips state fips code to restrict output to
 #'

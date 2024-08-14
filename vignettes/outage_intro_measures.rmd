@@ -1,14 +1,13 @@
 ---
 title: "Matthew Florence Outage EDA"
-format: 
-  html:
-    page-layout: full
-execute:
-  cache: true
-  warning: false
-  message: false
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Matthew Florence Outage EDA}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
+The following is a very cursory examination of the Outage data for Hurricanes Matthew and Florence
 
 ```{r, include = FALSE}
 library(exposur)
@@ -27,7 +26,7 @@ NC_tracts <- tracts(state = NC_fips, cb = TRUE)
 # get dates
 matthew_hurdat2  <- get_hurdat2(
   storm_id = "MATTHEW-2016",
-  path = "raw-data/hurdat2"
+  path = "../raw-data/hurdat2"
 )
 matthew_track <- st_combine(matthew_hurdat2) |>
   st_cast("LINESTRING")
@@ -37,11 +36,11 @@ matthew_end <- max(matthew_hurdat2$datetime)
 # get outage data
 matthew_eaglei <- get_eaglei(
   interval = interval(matthew_start, matthew_end + days(5)),
-  path = "raw-data/eaglei"
+  path = "../raw-data/eaglei"
 )
 matthew_outage <- calc_outage(matthew_eaglei, NC_fips)
 matthew_outage_sf <- NC_counties |>
-  left_join(matthew_outage, by = "GEOID")
+  left_join(matthew_outage, by = c("GEOID" = "geoid"))
 ```
 
 ```{r, include = FALSE}
@@ -63,53 +62,55 @@ florence_eaglei <- get_eaglei(
 )
 florence_outage <- calc_outage(florence_eaglei, NC_fips)
 florence_outage_sf <- NC_counties |>
-  left_join(florence_outage, by = "GEOID")
+  left_join(florence_outage, by = c("GEOID" = "geoid"))
 ```
 
-# Summary Stats
+## Summary Stats
 
 **Maximum Outage Percentage**: Maximum percentage of customers with no power by county over the course of the storm to 5 days after  
 **Average Outage Duration**: Average customer's total duration (days) with no power by county over the course of the storm to 5 days after
 
 ```{r, echo = FALSE}
-#| layout-ncol: 2
 
 bind_cols(
   Florence = florence_outage$max_pct_out,
   Matthew = matthew_outage$max_pct_out
 ) |>
   summary() |> 
-  knitr::kable(caption = "Maximum Outage Percentage")
+  knitr::kable(caption = "Maximum Outage Percentage") |>
+  kableExtra::kable_styling(full_width = FALSE, position = "float_left")
 
 bind_cols(
   Florence = florence_outage$avg_customer_hrs_out / 24,
   Matthew = matthew_outage$avg_customer_hrs_out / 24
 ) |>
   summary() |> 
-  knitr::kable(caption = "Average Outage Duration")
+  knitr::kable(caption = "Average Outage Duration") |>
+  kableExtra::kable_styling(full_width = FALSE, position = "left")
 ```
 
 ```{r, echo = FALSE}
-#| layout-ncol: 2
 table <- bind_cols(florence_outage, storm = "Florence") |>
   bind_rows(
     bind_cols(matthew_outage, storm = "Matthew")
-  ) 
-  
-ggplot(table) +
+  )
+
+outage_pct_boxplot <- ggplot(table) +
   geom_boxplot(aes(y = max_pct_out)) +
   facet_wrap(~ storm) +
   labs(title = "Maximum Outage Percentage")
 
-ggplot(table) +
+outage_dur_boxplot <- ggplot(table) +
   geom_boxplot(aes(y = avg_customer_hrs_out / 24 )) +
   facet_wrap(~ storm) +
   labs(title = "Average Outage Duration")
+
+cowplot::plot_grid(outage_pct_boxplot, outage_dur_boxplot)
 ```
 
-# Correlation
-## Matthew
-```{r, echo = FALSE, fig.width= 10}
+## Correlation
+### Matthew
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 10}
 matthew_prcp <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Matthew16/prcp_tr10.csv")
 matthew_close <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Matthew16/closest_dis_tr10.csv")
 matthew_wind <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Matthew16/windmodel_tr10.csv")
@@ -149,8 +150,8 @@ matthew_corr <- matthew |>
 cowplot::plot_grid(matthew_net, matthew_corr)
 ```
 
-## Florence
-```{r, echo = FALSE, fig.width= 10}
+### Florence
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 10}
 florence_prcp <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Florence18/prcp_tr10.csv")
 florence_close <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Florence18/closest_dis_tr10.csv")
 florence_wind <- read_csv("https://raw.githubusercontent.com/ryanzomorrodi/hurricaneexposuredata/master/output/Florence18/windmodel_tr10.csv")
@@ -188,10 +189,10 @@ florence_corr <- florence |>
 cowplot::plot_grid(florence_net, florence_corr)
 ```
 
-# Maps
+## Maps
 
-## Florence 
-```{r, echo = FALSE, fig.width= 10}
+### Florence 
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 10}
 ggplot() +
   geom_sf(data = florence_outage_sf, aes(fill = max_pct_out)) +
   scale_fill_distiller(palette = "Blues", direction = 1) +
@@ -218,7 +219,7 @@ ggplot() +
   )
 ```
 
-```{r, echo = FALSE, fig.width= 10}
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 10}
 ggplot() +
   geom_sf(data = florence_outage_sf, aes(fill = avg_customer_hrs_out / 24)) +
   scale_fill_distiller(palette = "Greens", direction = 1) +
@@ -245,8 +246,8 @@ ggplot() +
   )
 ```
 
-## Matthew
-```{r, echo = FALSE, fig.width= 10}
+### Matthew
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 10}
 ggplot() +
   geom_sf(data = matthew_outage_sf, aes(fill = max_pct_out)) +
   scale_fill_distiller(palette = "Blues", direction = 1) +
@@ -273,7 +274,7 @@ ggplot() +
   )
 ```
 
-```{r, echo = FALSE, fig.width= 10}
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 10}
 ggplot() +
   geom_sf(data = matthew_outage_sf, aes(fill = avg_customer_hrs_out / 24)) +
   scale_fill_distiller(palette = "Greens", direction = 1) +

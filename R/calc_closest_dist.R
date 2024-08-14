@@ -1,5 +1,18 @@
 #' Calculate Closest Distance and Time
 #'
+#' @description
+#' Utilizes [`stormwindmodel`](https://github.com/geanders/stormwindmodel)
+#' to impute the `hurdat2` track to 15 minute intervals, calculate
+#' at what time point the storm is closest, and record the distance
+#' from track at that time.
+#'
+#' @details
+#' ## Centroids
+#' By default this package will take the mean centroid of whatever
+#' geography provided to it. If you would like to approximate exposure
+#' at the population weighted centroid use `centr::mean_center()` on
+#' your geography before providing it to this function.
+#'
 #' @param hurdat2 Output from `get_hurdat2()`
 #' @param geography `sf` object for the area of interest
 #' @param geoid Unique identifier for geography

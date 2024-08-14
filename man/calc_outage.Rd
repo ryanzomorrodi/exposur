@@ -16,7 +16,8 @@ Maximum precentage and average duration of outage
 by county
 }
 \description{
-Calculate Outage Max Precentage and Average Duration
+Estimates the maximum outage precentage and average
+duration of outage for each county.
 }
 \examples{
 \dontrun{

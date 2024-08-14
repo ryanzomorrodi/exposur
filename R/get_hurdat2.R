@@ -25,10 +25,13 @@ download_newest_hurdat2 <- function(path) {
 
 #' Download HURDAT2 Best Track
 #'
-#' Data is downloaded from NOAA [HURDAT2 HTTPS Server](https://www.nhc.noaa.gov/data/hurdat/)
+#' @description
+#' Downloads most recent HURDAT2 file from NOAA
+#' [HURDAT2 HTTPS Server](https://www.nhc.noaa.gov/data/hurdat/)
 #'
 #' @param storm_id Storm name in all caps, dash, year (EX: "HARVEY-2017")
-#' @param path Path to download files into
+#' @param path Path to download files into (if not provided,
+#' files will be download into the `tempdir()`)
 #'
 #' @return HURDAT2 best track for a given storm
 #' @export

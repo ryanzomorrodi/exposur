@@ -18,7 +18,18 @@ Maximum wind and gust speed and duration calculated
 using the \code{stormwindmodel}
 }
 \description{
-Calculate Anderson et al. Wind
+Leverages the \href{https://github.com/geanders/stormwindmodel}{\code{stormwindmodel}}
+to allow for the approximate calculation wind exposure at
+individual points.
+}
+\details{
+\subsection{Centroids}{
+
+By default this package will take the mean centroid of whatever
+geography provided to it. If you would like to approximate exposure
+at the population weighted centroid use \code{centr::mean_center()} on
+your geography before providing it to this function.
+}
 }
 \examples{
 \dontrun{

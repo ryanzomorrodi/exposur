@@ -9,13 +9,15 @@ get_nClimGrid(interval, path = NULL)
 \arguments{
 \item{interval}{Dates to get weather data for}
 
-\item{path}{Path to download files into}
+\item{path}{Path to download files into (if not provided,
+files will be download into the \code{tempdir()})}
 }
 \value{
 \code{stars} raster of climate data over the interval specified
 }
 \description{
-Data is downloaded from NOAA \href{https://www.ncei.noaa.gov/products/land-based-station/nclimgrid-daily}{nClimGrid-Daily}
+Downloads NOAA \href{https://www.ncei.noaa.gov/products/land-based-station/nclimgrid-daily}{nClimGrid-Daily}
+data for the specified interval.
 }
 \examples{
 \dontrun{

@@ -42,6 +42,7 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/harvey_analysis.html">Harvey Analysis</a>
+    <a class="dropdown-item" href="../articles/outage_intro_measures.html">Matthew Florence Outage EDA</a>
   </div>
 </li>
       </ul>
@@ -65,7 +66,7 @@
             
       
       
-      <div class="d-none name"><code>harvey_analysis.Rmd</code></div>
+      <div class="d-none name"><code>harvey_analysis.rmd</code></div>
     </div>
 
     
@@ -97,6 +98,11 @@
 <span><span class="va">harvey_eaglei</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_eaglei.html">get_eaglei</a></span><span class="op">(</span></span>
 <span>  interval <span class="op">=</span> <span class="fu"><a href="https://lubridate.tidyverse.org/reference/interval.html" class="external-link">interval</a></span><span class="op">(</span><span class="va">harvey_start</span>, <span class="va">harvey_end</span> <span class="op">+</span> <span class="fu"><a href="https://lubridate.tidyverse.org/reference/period.html" class="external-link">days</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  path <span class="op">=</span> <span class="st">"raw-data/eaglei"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">harvey_stormevents</span> <span class="op">&lt;-</span> <span class="fu">get_stormevents</span><span class="op">(</span></span>
+<span>  interval <span class="op">=</span> <span class="fu"><a href="https://lubridate.tidyverse.org/reference/interval.html" class="external-link">interval</a></span><span class="op">(</span><span class="va">harvey_start</span>, <span class="va">harvey_end</span><span class="op">)</span>,</span>
+<span>  path <span class="op">=</span> <span class="st">"raw-data/stormevents"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Calculating measures</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -105,6 +111,27 @@
 <span><span class="va">harvey_daily_avgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_daily_avgs.html">calc_daily_avgs</a></span><span class="op">(</span><span class="va">harvey_nClimGrid</span>, <span class="va">TXLA_tracts</span><span class="op">)</span></span>
 <span><span class="va">harvey_anderson_prcp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_anderson_prcp.html">calc_anderson_prcp</a></span><span class="op">(</span><span class="va">harvey_daily_avgs</span>, <span class="va">harvey_closest_dist</span><span class="op">)</span></span>
 <span><span class="va">harvey_anderson_wind</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_anderson_wind.html">calc_anderson_wind</a></span><span class="op">(</span><span class="va">harvey_hurdat2</span>, <span class="va">TXLA_tracts</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-tmap.github.io/tmap/" class="external-link">tmap</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">harvey_anderson_prcp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_anderson_prcp.html">calc_anderson_prcp</a></span><span class="op">(</span><span class="va">harvey_daily_avgs</span>, <span class="va">harvey_closest_dist</span>, days_before <span class="op">=</span> <span class="fl">4</span>, days_after <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">harvey_anderson_prcp</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">TXLA_tracts</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"GEOID"</span> <span class="op">=</span> <span class="st">"geoid"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span><span class="fu"><a href="https://r-tmap.github.io/tmap/reference/tm_shape.html" class="external-link">tm_shape</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://r-tmap.github.io/tmap/reference/tm_polygons.html" class="external-link">tm_polygons</a></span><span class="op">(</span><span class="st">"cum_prcp"</span>, lwd <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">harvey_closest_dist</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>closest_date <span class="op">=</span> <span class="fu"><a href="https://lubridate.tidyverse.org/reference/as_date.html" class="external-link">as_date</a></span><span class="op">(</span><span class="va">closest_date</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">TXLA_tracts</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"GEOID"</span> <span class="op">=</span> <span class="st">"geoid"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span><span class="fu"><a href="https://r-tmap.github.io/tmap/reference/tm_shape.html" class="external-link">tm_shape</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://r-tmap.github.io/tmap/reference/tm_polygons.html" class="external-link">tm_polygons</a></span><span class="op">(</span><span class="st">"closest_date"</span>, lwd <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span><span class="va">harvey_outage</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">TXLA_tracts</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">max_pct_out</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
   </main>
 </div>
 

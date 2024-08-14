@@ -16,11 +16,11 @@ calc_anderson_prcp(daily_avgs, closest_dist, days_before = 1, days_after = 2)
 \item{days_after}{Number of days after closest distance (default 2)}
 }
 \value{
-Cumulative precipitation from \code{days_before} to \code{days_after}
-the date of the closest distance for each geography
+Cumulative precipitation for each geography
 }
 \description{
-Calculate Anderson et al. Precipitation
+Calculates the cumulative precipitation over the \code{days_before} to
+\code{days_after} the closest approach.
 }
 \examples{
 \dontrun{

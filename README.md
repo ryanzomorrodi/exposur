@@ -6,8 +6,9 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-Heavily inspired by `hurricaneexposure`. This package is currently just
-for my personal use.
+Heavily inspired by
+[`hurricaneexposure`](https://cran.r-project.org/web/packages/hurricaneexposure/).
+This package is currently just for internal CEHI usage.
 
 ## Installation
 
@@ -15,7 +16,7 @@ You can install the development version of `exposur` like so:
 
 ``` r
 # first download the stormwindmodel
-pak::install("geanders/stormwindmodel")
+pak::pkg_install("geanders/stormwindmodel")
 # then install this package
-pak::install("ryanzomorrodi/exposur")
+pak::pkg_install("ryanzomorrodi/exposur")
 ```
